@@ -1,3 +1,10 @@
+#This server file is used to create chat rooms but 
+#performance is compromised as this program uses select 
+#for selecting clients.
+
+################THIS IS A SINGLE THREAD PROGRAM################
+
+
 import socket
 import sys
 import ast
