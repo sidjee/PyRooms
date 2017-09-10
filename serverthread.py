@@ -20,7 +20,7 @@ if len(sys.argv) != 2:
 	sys.exit()
 
 server_sock = socket.socket()
-host = '127.0.0.1'
+host = '0.0.0.0'
 port = int(sys.argv[1])
 server_sock.bind((host,port));
 
@@ -99,7 +99,7 @@ def client_thread(new_sock,new_addr):
 			##########################################################
 			lock.release()
 
-			new_sock.send('Write the password\n')
+			new_sock.send('Write the password for new room\n')
 			password = new_sock.recv(1024)
 			if password == '':
 				new_sock.close
@@ -111,7 +111,7 @@ def client_thread(new_sock,new_addr):
 				#room_client[room_name] = [cl_name]
 				new_sock.send("New room is opened\n")
 				rooms.update({room_name:password})
-				new_dick = {new_sock:cl_name}
+				new_dick = {new_sock:[cl_name,room_name]}
 				client_sockets.update(new_dick)
 				###############################################################
 				lock.release()
@@ -120,7 +120,7 @@ def client_thread(new_sock,new_addr):
 			##############################################################
 			lock.release()
 			while True:
-				new_sock.send('Write the password\n')
+				new_sock.send('Write the password for existing room\n')
 				password = new_sock.recv(1024)
 				i=0
 				while True:
@@ -143,7 +143,7 @@ def client_thread(new_sock,new_addr):
 						room_client[room_name].append(cl_name)
 						new_sock.send('Added you to the room. Now you can send/recv messages..\n')
 
-						new_dick = {new_sock:cl_name}
+						new_dick = {new_sock:[cl_name,room_name]}
 						client_sockets.update(new_dick)
 						###########################################################################
 						lock.release()
@@ -170,31 +170,25 @@ def msg_transfer():
 			for client in i :
 					
 				data = client.recv(1024)
-					
+				room = client_sockets[client][1]
+
 				if data == '':
 					print ('Client disconnected ip = '+str(client.getpeername()))
 					client.close
 					
-					for room in room_client.keys():
-						if client_sockets[client] in room_client[room]:
-							room_client[room].remove(client_sockets[client])
-							if room_client[room] == []:
-								del room_client[room]
-								del rooms[room]
-							break
+					room_client[room].remove(client_sockets[client][0])
+					if room_client[room] == []:
+						del room_client[room]
+						del rooms[room]
+						
 					del client_sockets[client]
 
 				else:
-					for room in room_client.keys():
-						if client_sockets[client] in room_client[room]:
+					for client1 in client_sockets.keys():
+						if client_sockets[client1][1] == room:
 
-							for clname in room_client[room]:
-								if clname != client_sockets[client]:
-									for key,name in client_sockets.items():
-										if name == clname:
-											key.send(str(client_sockets[client]+' : '+data))
-							break
-
+							if  client1 != client:
+								client1.send(str(client_sockets[client][0]+' : '+data))
 
 
 class Mythread(threading.Thread):
