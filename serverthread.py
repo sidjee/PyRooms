@@ -30,18 +30,16 @@ print('Waiting for connections')
 
 wlcm_msg = '***********Welcome to chat service***********\n'
 
-#max_clients = 30
 q = Queue.Queue(100)
 server_sock.listen(4)
 
-rooms={}
-client_sockets = {}
-room_client = {}
+rooms={}					#{Room Name: Password}
+client_sockets = {}			#{Client Socket:[Client Name, Room Name]}
+room_client = {}			#{Room Name: Client Name}
 
 lock = threading.Lock()
 
 def client_thread(new_sock,new_addr):
-	#new_sock,new_addr = server_sock.accept()
 	global rooms
 	global client_sockets
 	global room_client
@@ -92,7 +90,7 @@ def client_thread(new_sock,new_addr):
 				z.put(x)
 		
 		q = z
-		#lock.release()
+
 		if y[0] not in room_client.keys():
 			
 			room_client[room_name] = [cl_name]
@@ -108,7 +106,7 @@ def client_thread(new_sock,new_addr):
 			else:
 				lock.acquire()
 				##########################################################
-				#room_client[room_name] = [cl_name]
+				
 				new_sock.send("New room is opened\n")
 				rooms.update({room_name:password})
 				new_dick = {new_sock:[cl_name,room_name]}
@@ -196,7 +194,6 @@ class Mythread(threading.Thread):
 		threading.Thread.__init__(self)
 
 	def run(self):
-		#global msg_transfer
 		self.msg_thread = threading.Thread( target = msg_transfer)
 		self.msg_thread.start()
 
